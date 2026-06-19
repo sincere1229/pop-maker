@@ -238,6 +238,15 @@ h3:first-child{margin-top:0;}
       <button id="bgImgClear" style="display:none;margin-top:4px;font-size:12px;color:var(--red);background:none;border:none;cursor:pointer;font-weight:800;">✕ 背景画像を削除</button>
     </div>
   </div>
+  <!-- 商品画像位置調整 -->
+  <h3>🖼️ 商品画像の配置</h3>
+  <div id="imgAdjBox" style="display:none;background:#f8f7ff;border-radius:12px;padding:14px;border:1px solid var(--line);">
+    <div class="slider-row"><span style="min-width:60px;">横位置</span><input type="range" id="imgX" min="-50" max="50" value="0"><span id="imgXVal">0</span>%</div>
+    <div class="slider-row"><span style="min-width:60px;">縦位置</span><input type="range" id="imgY" min="-50" max="50" value="0"><span id="imgYVal">0</span>%</div>
+    <div class="slider-row"><span style="min-width:60px;">サイズ</span><input type="range" id="imgScale" min="30" max="200" value="100"><span id="imgScaleVal">100</span>%</div>
+    <button id="imgAdjReset" style="margin-top:6px;font-size:12px;font-weight:800;color:var(--accent-deep);background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:5px 14px;cursor:pointer;font-family:inherit;">↺ リセット</button>
+  </div>
+  <div id="imgAdjNone" class="note" style="color:#bbb;">※ 商品画像をアップロードすると調整できます</div>
   <h3>🎨 テキスト背景帯</h3>
   <div class="seg" id="overlaySeg">
     <button data-ov="none" class="active">なし</button>
@@ -451,6 +460,7 @@ const G = {
   overlay:"none", priceStyle:"none",
   outW:1080, outH:1080,
   qrImg:null, qrPos:"bottomRight",
+  imgX:0, imgY:0, imgScale:100,
 };
 
 function show(id){document.getElementById(id).style.display="block";}
@@ -821,7 +831,27 @@ const OVERLAY_CONFIG2={
   white:"rgba(255,255,255,0.85)",red:"rgba(190,0,0,0.80)",
 };
 
-function showStep4(){buildPalette();show("s4");scrollTo("s4");updateThumb();}
+function showStep4(){buildPalette();show("s4");scrollTo("s4");updateImgAdjUI();updateThumb();}
+
+function updateImgAdjUI(){
+  const hasImg=!!G.bgCanvas;
+  document.getElementById("imgAdjBox").style.display=hasImg?"block":"none";
+  document.getElementById("imgAdjNone").style.display=hasImg?"none":"block";
+}
+["imgX","imgY","imgScale"].forEach(function(id){
+  document.getElementById(id).addEventListener("input",function(e){
+    G[id]=+e.target.value;
+    document.getElementById(id+"Val").textContent=e.target.value;
+    updateThumb();
+  });
+});
+document.getElementById("imgAdjReset").addEventListener("click",function(){
+  G.imgX=0;G.imgY=0;G.imgScale=100;
+  document.getElementById("imgX").value=0;document.getElementById("imgXVal").textContent=0;
+  document.getElementById("imgY").value=0;document.getElementById("imgYVal").textContent=0;
+  document.getElementById("imgScale").value=100;document.getElementById("imgScaleVal").textContent=100;
+  updateThumb();
+});
 
 document.getElementById("bgImgInput").addEventListener("change",e=>{
   const f=e.target.files[0];if(!f)return;
@@ -919,9 +949,11 @@ function drawPOP(canvas, outScale){
   if(G.bgCanvas){
     const src=G.bgCanvas;
     const maxW=W*.82,maxH=H*.54;
-    const sc2=Math.min(maxW/src.width,maxH/src.height);
+    const sc2=Math.min(maxW/src.width,maxH/src.height)*(G.imgScale/100);
     const dw=src.width*sc2,dh=src.height*sc2;
-    ctx.drawImage(src,(W-dw)/2,(H-dh)/2,dw,dh);
+    const baseX=(W-dw)/2 + W*(G.imgX/100);
+    const baseY=(H-dh)/2 + H*(G.imgY/100);
+    ctx.drawImage(src,baseX,baseY,dw,dh);
   }
   const tc=getTC();
   const ovColor=OVERLAY_CONFIG2[G.overlay];
