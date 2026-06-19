@@ -222,6 +222,18 @@ h3:first-child{margin-top:0;}
     <div class="note" style="margin-bottom:4px;">ライブプレビュー</div>
     <canvas id="thumbCanvas" style="border-radius:10px;border:1px solid var(--line);max-width:100%;"></canvas>
   </div>
+  <!-- テンプレ保存 -->
+  <h3>💾 テンプレート保存・呼び出し</h3>
+  <div style="background:#f8f7ff;border-radius:12px;padding:14px;border:1px solid var(--line);margin-bottom:4px;">
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <input type="text" id="tplNameInput" placeholder="テンプレート名（例：弁当POP）"
+        style="flex:1;border:2px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit;">
+      <button id="tplSaveBtn" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">💾 保存</button>
+    </div>
+    <div id="tplList" style="display:flex;flex-direction:column;gap:6px;">
+      <div class="note" id="tplEmpty">保存済みテンプレートはありません</div>
+    </div>
+  </div>
   <h3>🖼 背景</h3>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;">
     <div style="flex:1;min-width:200px;">
@@ -831,7 +843,121 @@ const OVERLAY_CONFIG2={
   white:"rgba(255,255,255,0.85)",red:"rgba(190,0,0,0.80)",
 };
 
-function showStep4(){buildPalette();show("s4");scrollTo("s4");updateImgAdjUI();updateThumb();}
+/* ============================================================
+   テンプレート保存・呼び出し
+============================================================ */
+const TPL_KEY = "pop_maker_templates";
+
+function getTplData(){
+  try{ return JSON.parse(localStorage.getItem(TPL_KEY)||"[]"); }
+  catch(e){ return []; }
+}
+
+function saveTplData(list){
+  localStorage.setItem(TPL_KEY, JSON.stringify(list));
+}
+
+function getCurrentSettings(){
+  return {
+    bgColor: G.bgColor,
+    overlay: G.overlay,
+    font: G.font,
+    priceStyle: G.priceStyle,
+    imgX: G.imgX, imgY: G.imgY, imgScale: G.imgScale,
+    qrPos: G.qrPos,
+    qrUrl: document.getElementById("qrUrl").value,
+    qrLabel: document.getElementById("qrLabel").value,
+    qrSize: document.getElementById("qrSize").value,
+    t_top: document.getElementById("t_top").value,
+    c_top: document.getElementById("c_top").value,
+    fs_top: document.getElementById("fs_top").value,
+    ha_top: document.getElementById("ha_top").value,
+    vp_top: document.getElementById("vp_top").value,
+    t_mid: document.getElementById("t_mid").value,
+    c_mid: document.getElementById("c_mid").value,
+    fs_mid: document.getElementById("fs_mid").value,
+    ha_mid: document.getElementById("ha_mid").value,
+    vp_mid: document.getElementById("vp_mid").value,
+    t_bot: document.getElementById("t_bot").value,
+    c_bot: document.getElementById("c_bot").value,
+    fs_bot: document.getElementById("fs_bot").value,
+    ha_bot: document.getElementById("ha_bot").value,
+    vp_bot: document.getElementById("vp_bot").value,
+    outW: G.outW, outH: G.outH,
+  };
+}
+
+function applySettings(s){
+  if(s.bgColor!==undefined){G.bgColor=s.bgColor;buildPalette();}
+  if(s.overlay!==undefined){G.overlay=s.overlay;document.querySelectorAll("#overlaySeg button").forEach(b=>b.classList.toggle("active",b.dataset.ov===s.overlay));}
+  if(s.font!==undefined){G.font=s.font;document.querySelectorAll("#fontSeg button").forEach(b=>b.classList.toggle("active",b.dataset.font===s.font));}
+  if(s.priceStyle!==undefined){G.priceStyle=s.priceStyle;document.querySelectorAll("#priceBadgeRow button").forEach(b=>b.classList.toggle("active",b.dataset.ps===s.priceStyle));}
+  if(s.imgX!==undefined){G.imgX=s.imgX;document.getElementById("imgX").value=s.imgX;document.getElementById("imgXVal").textContent=s.imgX;}
+  if(s.imgY!==undefined){G.imgY=s.imgY;document.getElementById("imgY").value=s.imgY;document.getElementById("imgYVal").textContent=s.imgY;}
+  if(s.imgScale!==undefined){G.imgScale=s.imgScale;document.getElementById("imgScale").value=s.imgScale;document.getElementById("imgScaleVal").textContent=s.imgScale;}
+  if(s.qrPos!==undefined){G.qrPos=s.qrPos;document.querySelectorAll("#qrPosSeg button").forEach(b=>b.classList.toggle("active",b.dataset.qp===s.qrPos));}
+  const fields=["qrUrl","qrLabel","qrSize","t_top","c_top","fs_top","ha_top","vp_top","t_mid","c_mid","fs_mid","ha_mid","vp_mid","t_bot","c_bot","fs_bot","ha_bot","vp_bot"];
+  fields.forEach(f=>{if(s[f]!==undefined){const el=document.getElementById(f);if(el)el.value=s[f];}});
+  if(s.qrSize!==undefined)document.getElementById("qrSizeVal").textContent=s.qrSize;
+  if(s.vp_top!==undefined)document.getElementById("vp_top_val").textContent=s.vp_top;
+  if(s.vp_mid!==undefined)document.getElementById("vp_mid_val").textContent=s.vp_mid;
+  if(s.vp_bot!==undefined)document.getElementById("vp_bot_val").textContent=s.vp_bot;
+  if(s.outW!==undefined){G.outW=s.outW;G.outH=s.outH;document.querySelectorAll(".size-btn").forEach(b=>b.classList.toggle("active",+b.dataset.w===s.outW&&+b.dataset.h===s.outH));}
+  if(s.qrUrl)setTimeout(buildQR,100);
+  updateThumb();
+}
+
+function renderTplList(){
+  const list=getTplData();
+  const container=document.getElementById("tplList");
+  const empty=document.getElementById("tplEmpty");
+  if(list.length===0){empty.style.display="block";container.innerHTML='<div class="note" id="tplEmpty">保存済みテンプレートはありません</div>';return;}
+  empty.style.display="none";
+  container.innerHTML="";
+  list.forEach((tpl,i)=>{
+    const row=document.createElement("div");
+    row.style.cssText="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border-radius:8px;border:1px solid var(--line);";
+    const nameEl=document.createElement("span");
+    nameEl.textContent=tpl.name;
+    nameEl.style.cssText="flex:1;font-size:13px;font-weight:800;color:#444;";
+    const loadBtn=document.createElement("button");
+    loadBtn.textContent="呼び出す";
+    loadBtn.style.cssText="padding:5px 12px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:6px;color:var(--accent-deep);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;";
+    loadBtn.addEventListener("click",()=>{applySettings(tpl.settings);});
+    const delBtn=document.createElement("button");
+    delBtn.textContent="✕";
+    delBtn.style.cssText="padding:5px 8px;background:#fff0f0;border:1px solid #ffcccc;border-radius:6px;color:#c0392b;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;";
+    delBtn.addEventListener("click",()=>{
+      if(!confirm(`「${tpl.name}」を削除しますか？`))return;
+      const newList=getTplData().filter((_,j)=>j!==i);
+      saveTplData(newList);renderTplList();
+    });
+    row.appendChild(nameEl);row.appendChild(loadBtn);row.appendChild(delBtn);
+    container.appendChild(row);
+  });
+}
+
+document.getElementById("tplSaveBtn").addEventListener("click",()=>{
+  const name=document.getElementById("tplNameInput").value.trim();
+  if(!name){alert("テンプレート名を入力してください");return;}
+  const list=getTplData();
+  // 同名があれば上書き確認
+  const existIdx=list.findIndex(t=>t.name===name);
+  if(existIdx>=0){
+    if(!confirm(`「${name}」はすでに存在します。上書きしますか？`))return;
+    list[existIdx].settings=getCurrentSettings();
+  } else {
+    list.push({name, settings:getCurrentSettings()});
+  }
+  saveTplData(list);renderTplList();
+  document.getElementById("tplNameInput").value="";
+  // 保存成功フィードバック
+  const btn=document.getElementById("tplSaveBtn");
+  btn.textContent="✅ 保存完了";
+  setTimeout(()=>btn.textContent="💾 保存",1500);
+});
+
+function showStep4(){buildPalette();show("s4");scrollTo("s4");updateImgAdjUI();renderTplList();updateThumb();}
 
 function updateImgAdjUI(){
   const hasImg=!!G.bgCanvas;
