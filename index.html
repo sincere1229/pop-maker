@@ -102,10 +102,6 @@ h3:first-child{margin-top:0;}
 .palette{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0;}
 .pal-btn{width:34px;height:34px;border-radius:8px;border:3px solid transparent;cursor:pointer;transition:transform .1s;}
 .pal-btn.active{border-color:var(--accent);transform:scale(1.15);}
-.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin:8px 0;}
-.tpl-btn{border:2px solid var(--line);border-radius:12px;background:#fff;padding:10px 8px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;color:#555;text-align:center;}
-.tpl-btn.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-deep);}
-.tpl-btn .tpl-swatch{height:20px;border-radius:4px;margin-bottom:6px;}
 .qr-row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;}
 .qr-preview{width:80px;height:80px;border:1px solid var(--line);border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa;flex:none;}
 .qr-preview img{width:76px;height:76px;}
@@ -226,8 +222,6 @@ h3:first-child{margin-top:0;}
     <div class="note" style="margin-bottom:4px;">ライブプレビュー</div>
     <canvas id="thumbCanvas" style="border-radius:10px;border:1px solid var(--line);max-width:100%;"></canvas>
   </div>
-  <h3>🎨 テンプレート</h3>
-  <div class="tpl-grid" id="tplGrid"></div>
   <h3>🖼 背景</h3>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;">
     <div style="flex:1;min-width:200px;">
@@ -443,49 +437,23 @@ function show(id){document.getElementById(id).style.display="block";}
 function hide(id){document.getElementById(id).style.display="none";}
 function scrollTo(id){document.getElementById(id).scrollIntoView({behavior:"smooth"});}
 
-const TEMPLATES = [
-  {id:"night",    name:"夜空",     bg:"#1a1a2e", overlay:"dark",   font:0, topC:"#c0a0ff", midC:"#ffffff", botC:"#ffe082"},
-  {id:"halal",    name:"ハラル🕌", bg:"#1e3a1e", overlay:"accent", font:0, topC:"#a8ffa8", midC:"#ffffff", botC:"#ffe082"},
-  {id:"sale",     name:"セール",   bg:"#8b0000", overlay:"red",    font:2, topC:"#ffff00", midC:"#ffffff", botC:"#ffe082"},
-  {id:"cafe",     name:"カフェ",   bg:"#2c1a0e", overlay:"dark",   font:1, topC:"#f5deb3", midC:"#ffffff", botC:"#d2b48c"},
-  {id:"fresh",    name:"直売所",   bg:"#1e4a1e", overlay:"none",   font:0, topC:"#ffff99", midC:"#ffffff", botC:"#a8ffa8"},
-  {id:"elegant",  name:"エレガント",bg:"#2a1a3a", overlay:"dark",  font:1, topC:"#ffe0ff", midC:"#ffffff", botC:"#ffd700"},
-  {id:"pop",      name:"ポップ",   bg:"#ff6b9d", overlay:"none",   font:2, topC:"#ffff00", midC:"#ffffff", botC:"#00ffff"},
-  {id:"white",    name:"白ベース", bg:"#f5f5f5", overlay:"none",   font:0, topC:"#333333", midC:"#222222", botC:"#6a5acd"},
-];
 const FONTS = [
   "'Hiragino Sans','Yu Gothic',sans-serif",
   "'Hiragino Mincho ProN','Yu Mincho',serif",
   "'HGMaruGothicMPRO','Hiragino Maru Gothic ProN',sans-serif",
 ];
-const BG_COLORS = ["#1a1a2e","#2e1a1a","#1a2e1a","#2a1a3a","#1a2a3a","#3a2a1a","#ffffff","#f5f0e8","#1a1a1a","#fdf6ec","#2c1a0e","#8b0000"];
+const BG_COLORS = [
+  // ダーク系
+  "#1a1a2e","#2a1a3a","#1a2e1a","#2e1a1a","#1a2a3a","#3a2a1a","#1a1a1a","#2c1a0e","#8b0000",
+  // ライト系
+  "#ffffff","#f5f0e8","#fdf6ec","#fff0f5","#f0f8ff","#f0fff0","#fffde7","#fce4ec",
+  // ビビッド系
+  "#ff6b9d","#ff8c00","#4a90d9","#2e7d32","#6a1b9a","#00838f",
+];
 const OVERLAY_CONFIG = {
   none:null, dark:"rgba(0,0,0,0.5)", accent:"rgba(74,58,160,0.72)",
   white:"rgba(255,255,255,0.82)", red:"rgba(180,0,0,0.78)",
 };
-
-const tplGrid = document.getElementById("tplGrid");
-TEMPLATES.forEach(t=>{
-  const b=document.createElement("button");
-  b.className="tpl-btn";
-  b.innerHTML=`<div class="tpl-swatch" style="background:${t.bg}"></div>${t.name}`;
-  b.addEventListener("click",()=>{
-    applyTemplate(t);
-    document.querySelectorAll(".tpl-btn").forEach(x=>x.classList.toggle("active",x===b));
-  });
-  tplGrid.appendChild(b);
-});
-
-function applyTemplate(t){
-  G.bgColor=t.bg; G.overlay=t.overlay; G.font=FONTS[t.font];
-  document.getElementById("c_top").value=t.topC;
-  document.getElementById("c_mid").value=t.midC;
-  document.getElementById("c_bot").value=t.botC;
-  document.querySelectorAll("#overlaySeg button").forEach(b=>b.classList.toggle("active",b.dataset.ov===t.overlay));
-  document.querySelectorAll("#fontSeg button").forEach(b=>b.classList.toggle("active",b.dataset.font===FONTS[t.font]));
-  document.querySelectorAll(".pal-btn").forEach(b=>b.classList.toggle("active",b.dataset.c===t.bg));
-  updateThumb();
-}
 
 function buildPalette(){
   const pal=document.getElementById("palette"); pal.innerHTML="";
@@ -853,16 +821,21 @@ document.querySelectorAll("#qrPosSeg button").forEach(b=>{
 
 let qrTimer=null;
 document.getElementById("qrUrl").addEventListener("input",()=>{
-  clearTimeout(qrTimer);qrTimer=setTimeout(buildQR,600);
+  clearTimeout(qrTimer);qrTimer=setTimeout(buildQR,800);
+});
+document.getElementById("qrUrl").addEventListener("blur",()=>{
+  clearTimeout(qrTimer);buildQR();
 });
 function buildQR(){
   const url=document.getElementById("qrUrl").value.trim();
   const preview=document.getElementById("qrPreview");
   if(!url){G.qrImg=null;preview.innerHTML="QR";updateThumb();return;}
-  const src=`https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodeURIComponent(url)}&choe=UTF-8`;
+  // qrserver.com API（cors対応・安定）
+  const src=`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}&format=png`;
+  preview.innerHTML='<div style="font-size:10px;color:#aaa;text-align:center;padding:10px;">生成中...</div>';
   const img=new Image();img.crossOrigin="anonymous";
-  img.onload=()=>{G.qrImg=img;preview.innerHTML="";preview.appendChild(img.cloneNode());updateThumb();};
-  img.onerror=()=>{G.qrImg=null;};
+  img.onload=()=>{G.qrImg=img;preview.innerHTML="";const clone=img.cloneNode();clone.style.width="76px";clone.style.height="76px";preview.appendChild(clone);updateThumb();};
+  img.onerror=()=>{G.qrImg=null;preview.innerHTML='<div style="font-size:10px;color:#e55;text-align:center;padding:8px;">読込失敗</div>';};
   img.src=src;
 }
 
