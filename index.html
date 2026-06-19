@@ -264,8 +264,13 @@ h3:first-child{margin-top:0;}
     <textarea id="t_top" rows="2" placeholder="例：期間限定・本日のおすすめ"></textarea>
     <div class="ctrl-row">
       <label>色<input type="color" id="c_top" value="#ffffff"></label>
-      <label>サイズ<select id="fs_top"><option value="28">極小</option><option value="36">小</option><option value="52" selected>中</option><option value="72">大</option><option value="96">特大</option></select></label>
-      <label>位置<select id="ha_top"><option value="left">左</option><option value="center" selected>中央</option><option value="right">右</option></select></label>
+      <label>サイズ(px)<input type="number" id="fs_top" value="52" min="10" max="400" style="width:64px;border:2px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;font-family:inherit;"></label>
+      <label>横位置<select id="ha_top"><option value="left">左</option><option value="center" selected>中央</option><option value="right">右</option></select></label>
+    </div>
+    <div class="ctrl-row" style="margin-top:6px;">
+      <label style="flex:1;">縦位置(%) <span id="vp_top_val">15</span>%
+        <input type="range" id="vp_top" min="5" max="95" value="15" style="width:100%;accent-color:var(--accent);margin-top:4px;">
+      </label>
     </div>
   </div>
   <div class="text-block">
@@ -273,8 +278,13 @@ h3:first-child{margin-top:0;}
     <textarea id="t_mid" rows="2" placeholder="例：ビリヤニ ¥980"></textarea>
     <div class="ctrl-row">
       <label>色<input type="color" id="c_mid" value="#ffffff"></label>
-      <label>サイズ<select id="fs_mid"><option value="52">小</option><option value="72">中</option><option value="96" selected>大</option><option value="128">特大</option><option value="160">超特大</option></select></label>
-      <label>位置<select id="ha_mid"><option value="left">左</option><option value="center" selected>中央</option><option value="right">右</option></select></label>
+      <label>サイズ(px)<input type="number" id="fs_mid" value="96" min="10" max="400" style="width:64px;border:2px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;font-family:inherit;"></label>
+      <label>横位置<select id="ha_mid"><option value="left">左</option><option value="center" selected>中央</option><option value="right">右</option></select></label>
+    </div>
+    <div class="ctrl-row" style="margin-top:6px;">
+      <label style="flex:1;">縦位置(%) <span id="vp_mid_val">50</span>%
+        <input type="range" id="vp_mid" min="5" max="95" value="50" style="width:100%;accent-color:var(--accent);margin-top:4px;">
+      </label>
     </div>
   </div>
   <div class="text-block">
@@ -282,8 +292,13 @@ h3:first-child{margin-top:0;}
     <textarea id="t_bot" rows="2" placeholder="例：Halal Certified 🕌"></textarea>
     <div class="ctrl-row">
       <label>色<input type="color" id="c_bot" value="#ffe082"></label>
-      <label>サイズ<select id="fs_bot"><option value="24">極小</option><option value="28">小</option><option value="36" selected>中</option><option value="52">大</option><option value="72">特大</option></select></label>
-      <label>位置<select id="ha_bot"><option value="left">左</option><option value="center" selected>中央</option><option value="right">右</option></select></label>
+      <label>サイズ(px)<input type="number" id="fs_bot" value="36" min="10" max="400" style="width:64px;border:2px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px;font-family:inherit;"></label>
+      <label>横位置<select id="ha_bot"><option value="left">左</option><option value="center" selected>中央</option><option value="right">右</option></select></label>
+    </div>
+    <div class="ctrl-row" style="margin-top:6px;">
+      <label style="flex:1;">縦位置(%) <span id="vp_bot_val">85</span>%
+        <input type="range" id="vp_bot" min="5" max="95" value="85" style="width:100%;accent-color:var(--accent);margin-top:4px;">
+      </label>
     </div>
   </div>
   <h3>🔗 QRコード（任意）</h3>
@@ -292,6 +307,11 @@ h3:first-child{margin-top:0;}
     <div style="flex:1;min-width:200px;">
       <input type="text" id="qrUrl" placeholder="https://example.com" style="width:100%;border:2px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;margin-bottom:8px;">
       <input type="text" id="qrLabel" placeholder="ラベル（例：詳細はこちら）" style="width:100%;border:2px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;margin-bottom:8px;">
+      <div style="margin-bottom:8px;">
+        <label style="font-size:12px;font-weight:800;color:#888;">QRサイズ: <span id="qrSizeVal">18</span>%
+          <input type="range" id="qrSize" min="8" max="40" value="18" style="width:100%;accent-color:var(--accent);margin-top:4px;">
+        </label>
+      </div>
       <div class="seg" id="qrPosSeg">
         <button data-qp="bottomRight" class="active">右下</button>
         <button data-qp="bottomLeft">左下</button>
@@ -814,12 +834,24 @@ document.querySelectorAll("#qrPosSeg button").forEach(b=>{
   b.addEventListener("click",()=>{G.qrPos=b.dataset.qp;document.querySelectorAll("#qrPosSeg button").forEach(x=>x.classList.toggle("active",x===b));updateThumb();});
 });
 
-["t_top","c_top","fs_top","ha_top","t_mid","c_mid","fs_mid","ha_mid","t_bot","c_bot","fs_bot","ha_bot"].forEach(id=>{
-  document.getElementById(id).addEventListener("input",updateThumb);
-  document.getElementById(id).addEventListener("change",updateThumb);
+["t_top","c_top","fs_top","ha_top","vp_top",
+ "t_mid","c_mid","fs_mid","ha_mid","vp_mid",
+ "t_bot","c_bot","fs_bot","ha_bot","vp_bot"].forEach(id=>{
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.addEventListener("input",()=>{
+    if(id==="vp_top")document.getElementById("vp_top_val").textContent=el.value;
+    if(id==="vp_mid")document.getElementById("vp_mid_val").textContent=el.value;
+    if(id==="vp_bot")document.getElementById("vp_bot_val").textContent=el.value;
+    updateThumb();
+  });
+  el.addEventListener("change",updateThumb);
 });
 
-let qrTimer=null;
+document.getElementById("qrSize").addEventListener("input",e=>{
+  document.getElementById("qrSizeVal").textContent=e.target.value;
+  updateThumb();
+});
 document.getElementById("qrUrl").addEventListener("input",()=>{
   clearTimeout(qrTimer);qrTimer=setTimeout(buildQR,800);
 });
@@ -851,9 +883,9 @@ function wrapText(ctx,text,maxW){
 
 function getTC(){
   return{
-    top:{text:document.getElementById("t_top").value,color:document.getElementById("c_top").value,size:+document.getElementById("fs_top").value,align:document.getElementById("ha_top").value},
-    mid:{text:document.getElementById("t_mid").value,color:document.getElementById("c_mid").value,size:+document.getElementById("fs_mid").value,align:document.getElementById("ha_mid").value},
-    bot:{text:document.getElementById("t_bot").value,color:document.getElementById("c_bot").value,size:+document.getElementById("fs_bot").value,align:document.getElementById("ha_bot").value},
+    top:{text:document.getElementById("t_top").value,color:document.getElementById("c_top").value,size:+document.getElementById("fs_top").value,align:document.getElementById("ha_top").value,vp:+document.getElementById("vp_top").value/100},
+    mid:{text:document.getElementById("t_mid").value,color:document.getElementById("c_mid").value,size:+document.getElementById("fs_mid").value,align:document.getElementById("ha_mid").value,vp:+document.getElementById("vp_mid").value/100},
+    bot:{text:document.getElementById("t_bot").value,color:document.getElementById("c_bot").value,size:+document.getElementById("fs_bot").value,align:document.getElementById("ha_bot").value,vp:+document.getElementById("vp_bot").value/100},
   };
 }
 
@@ -879,18 +911,23 @@ function drawPOP(canvas, outScale){
     ctx.drawImage(src,(W-dw)/2,(H-dh)/2,dw,dh);
   }
   const tc=getTC();
-  const padV=Math.round(H*.06);
   const ovColor=OVERLAY_CONFIG2[G.overlay];
-  function drawTextBlock(cfg, centerY, bandH){
-    if(!cfg.text) return 0;
+
+  // テキスト描画（縦位置はvpで指定）
+  function drawTextBlock(cfg){
+    if(!cfg.text)return;
     const fs=Math.round(cfg.size*s);
     ctx.font=`900 ${fs}px ${G.font}`;
     const maxW=W*.88;
     const lines=wrapText(ctx,cfg.text,maxW);
     const lh=fs*1.45;
     const totalH=lines.length*lh;
+    const centerY=H*cfg.vp;
     const startY=centerY-totalH/2+fs*.5;
-    if(ovColor){ctx.fillStyle=ovColor;ctx.fillRect(0,centerY-bandH/2-6*s,W,bandH+12*s);}
+    if(ovColor){
+      ctx.fillStyle=ovColor;
+      ctx.fillRect(0,centerY-totalH/2-8*s,W,totalH+16*s);
+    }
     ctx.fillStyle=cfg.color;ctx.textBaseline="middle";
     ctx.shadowColor="rgba(0,0,0,0.6)";ctx.shadowBlur=10*s;
     lines.forEach((ln,i)=>{
@@ -899,45 +936,60 @@ function drawPOP(canvas, outScale){
       ctx.fillText(ln,x,startY+i*lh);
     });
     ctx.shadowBlur=0;
-    return totalH;
   }
+
+  // 価格強調（セール帯）
   if(G.priceStyle==="sale"&&tc.mid.text){
+    const fs=Math.round(tc.mid.size*s);
     ctx.fillStyle="#cc0000";
-    ctx.fillRect(0,H*.42,W,Math.round(tc.mid.size*s*2.2));
+    ctx.fillRect(0,H*tc.mid.vp-fs,W,fs*2.2);
   }
-  const topBandH=Math.round((tc.top.size||52)*s*2);
-  const botBandH=Math.round((tc.bot.size||36)*s*2);
-  const midY=G.bgCanvas?H*.78:H*.5;
-  drawTextBlock(tc.top,padV+topBandH/2,topBandH);
-  drawTextBlock(tc.mid,midY,Math.round((tc.mid.size||96)*s*2.2));
-  drawTextBlock(tc.bot,H-padV-botBandH/2,botBandH);
+
+  drawTextBlock(tc.top);
+  drawTextBlock(tc.mid);
+  drawTextBlock(tc.bot);
+
+  // 価格強調：¥大・丸囲み
   if((G.priceStyle==="big"||G.priceStyle==="circle")&&tc.mid.text){
     const yenMatch=tc.mid.text.match(/[¥￥][\d,]+/);
     if(yenMatch){
-      const yenStr=yenMatch[0];
       const fs=Math.round(tc.mid.size*s*1.1);
       ctx.font=`900 ${fs}px ${G.font}`;
-      const tw=ctx.measureText(yenStr).width;
-      const cx=W/2,cy=midY;
+      const tw=ctx.measureText(yenMatch[0]).width;
+      const cx=W/2,cy=H*tc.mid.vp;
       if(G.priceStyle==="circle"){
         ctx.save();ctx.strokeStyle=tc.mid.color;ctx.lineWidth=6*s;
         ctx.beginPath();ctx.ellipse(cx,cy,tw/2+24*s,fs*.7,0,0,Math.PI*2);ctx.stroke();ctx.restore();
       }
     }
   }
+
+  // QR
   if(G.qrImg){
-    const qs=Math.round(Math.min(W,H)*.18);
+    const qsPct=+(document.getElementById("qrSize")?.value||18)/100;
+    const qs=Math.round(Math.min(W,H)*qsPct);
     const qpad=Math.round(16*s);
     let qx,qy;
-    if(G.qrPos==="bottomRight"){qx=W-qs-qpad;qy=H-qs-qpad;}
-    else if(G.qrPos==="bottomLeft"){qx=qpad;qy=H-qs-qpad;}
-    else{qx=W/2-qs/2;qy=H-qs-qpad;}
+    if(G.qrPos==="bottomRight"){qx=W-qs-qpad;qy=H-qs-qpad*3;}
+    else if(G.qrPos==="bottomLeft"){qx=qpad;qy=H-qs-qpad*3;}
+    else{qx=W/2-qs/2;qy=H-qs-qpad*3;}
+    const label=document.getElementById("qrLabel")?.value||"";
+    const labelH=label?Math.round(28*s):0;
     ctx.save();
-    ctx.fillStyle="#fff";ctx.beginPath();
-    if(ctx.roundRect)ctx.roundRect(qx-8,qy-8,qs+16,qs+16,10);else ctx.rect(qx-8,qy-8,qs+16,qs+16);
-    ctx.fill();ctx.drawImage(G.qrImg,qx,qy,qs,qs);
-    const label=document.getElementById("qrLabel").value;
-    if(label){ctx.font=`700 ${Math.round(22*s)}px ${G.font}`;ctx.fillStyle="#333";ctx.textAlign="center";ctx.fillText(label,qx+qs/2,qy+qs+Math.round(20*s));}
+    ctx.fillStyle="#ffffff";
+    const boxPad=Math.round(10*s);
+    ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(qx-boxPad,qy-boxPad,qs+boxPad*2,qs+boxPad*2+labelH,12*s);
+    else ctx.rect(qx-boxPad,qy-boxPad,qs+boxPad*2,qs+boxPad*2+labelH);
+    ctx.fill();
+    ctx.drawImage(G.qrImg,qx,qy,qs,qs);
+    if(label){
+      ctx.font=`700 ${Math.round(22*s)}px ${G.font}`;
+      ctx.fillStyle="#222222";
+      ctx.textAlign="center";
+      ctx.textBaseline="middle";
+      ctx.fillText(label,qx+qs/2,qy+qs+Math.round(18*s));
+    }
     ctx.restore();
   }
 }
