@@ -463,6 +463,8 @@ const FONTS = [
   "'HGMaruGothicMPRO','Hiragino Maru Gothic ProN',sans-serif",
 ];
 const BG_COLORS = [
+  // 透過
+  "transparent",
   // ダーク系
   "#1a1a2e","#2a1a3a","#1a2e1a","#2e1a1a","#1a2a3a","#3a2a1a","#1a1a1a","#2c1a0e","#8b0000",
   // ライト系
@@ -480,8 +482,16 @@ function buildPalette(){
   BG_COLORS.forEach(c=>{
     const b=document.createElement("button");
     b.className="pal-btn"+(c===G.bgColor?" active":"");
-    b.dataset.c=c; b.style.background=c;
-    b.style.outline=c==="#ffffff"?"2px solid #ddd":"none";
+    b.dataset.c=c;
+    if(c==="transparent"){
+      // 市松模様で透過を表現
+      b.style.background="repeating-conic-gradient(#ccc 0 25%,#fff 0 50%) 0 0/10px 10px";
+      b.title="透過（背景なし）";
+      b.innerHTML='<span style="font-size:10px;font-weight:900;color:#666;">透過</span>';
+    } else {
+      b.style.background=c;
+      b.style.outline=c==="#ffffff"?"2px solid #ddd":"none";
+    }
     b.addEventListener("click",()=>{
       G.bgColor=c;
       document.querySelectorAll(".pal-btn").forEach(x=>x.classList.toggle("active",x===b));
@@ -852,6 +862,7 @@ document.getElementById("qrSize").addEventListener("input",e=>{
   document.getElementById("qrSizeVal").textContent=e.target.value;
   updateThumb();
 });
+let qrTimer=null;
 document.getElementById("qrUrl").addEventListener("input",()=>{
   clearTimeout(qrTimer);qrTimer=setTimeout(buildQR,800);
 });
@@ -900,7 +911,9 @@ function drawPOP(canvas, outScale){
     if(ir>cr){dw=H*ir;dx=(W-dw)/2;}else{dh=W/ir;dy=(H-dh)/2;}
     ctx.drawImage(G.bgImgSrc,dx,dy,dw,dh);
     ctx.fillStyle="rgba(0,0,0,0.3)";ctx.fillRect(0,0,W,H);
-  }else{
+  } else if(G.bgColor==="transparent"){
+    // 何も描かない→透過PNG
+  } else {
     ctx.fillStyle=G.bgColor;ctx.fillRect(0,0,W,H);
   }
   if(G.bgCanvas){
